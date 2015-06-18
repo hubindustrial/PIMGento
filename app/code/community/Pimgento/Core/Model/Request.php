@@ -17,16 +17,6 @@ class Pimgento_Core_Model_Request extends Mage_Core_Model_Abstract
     }
 
     /**
-     * Retrieve Adapter
-     *
-     * @return Pimgento_Core_Model_Resource_Request
-     */
-    public function getResource()
-    {
-        return $this->_getResource();
-    }
-
-    /**
      * Set values to attributes
      *
      * @param string $name
