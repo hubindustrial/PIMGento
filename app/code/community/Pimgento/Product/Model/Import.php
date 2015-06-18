@@ -400,7 +400,7 @@ class Pimgento_Product_Model_Import extends Pimgento_Core_Model_Import_Abstract
     }
 
     /**
-     * Create category entities (Step 8)
+     * Create product entities (Step 8)
      *
      * @param Pimgento_Core_Model_Task $task
      *
