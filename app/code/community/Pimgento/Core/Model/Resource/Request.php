@@ -258,10 +258,7 @@ class Pimgento_Core_Model_Resource_Request extends Mage_Core_Model_Resource_Db_A
      */
     public function getTableName($name)
     {
-        /* @var $coreResource Mage_Core_Model_Resource */
-        $resource = Mage::getSingleton('core/resource');
-
-        return $resource->getTableName('tmp_pimgento_core_' . $name);
+        return $this->_resources->getTableName('tmp_pimgento_core_' . $name);
     }
 
     /**
