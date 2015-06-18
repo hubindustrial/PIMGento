@@ -9,6 +9,11 @@ abstract class Pimgento_Core_Model_Import_Abstract
 {
 
     /**
+     * @var Pimgento_Core_Model_Request
+     */
+    protected $_request;
+
+    /**
      * @var string
      */
     protected $_code;
@@ -96,9 +101,13 @@ abstract class Pimgento_Core_Model_Import_Abstract
      *
      * @return Pimgento_Core_Model_Request
      */
-    protected function getRequest()
+    public function getRequest()
     {
-        return Mage::getModel('pimgento_core/request');
+        if (!$this->_request) {
+            $this->_request = Mage::getModel('pimgento_core/request');
+        }
+
+        return $this->_request;
     }
 
     /**
