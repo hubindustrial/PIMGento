@@ -17,16 +17,6 @@ class Pimgento_Core_Model_Request extends Mage_Core_Model_Abstract
     }
 
     /**
-     * Retrieve Adapter
-     *
-     * @return Pimgento_Core_Model_Resource_Request
-     */
-    public function getResource()
-    {
-        return $this->_getResource();
-    }
-
-    /**
      * Set values to attributes
      *
      * @param string $name
@@ -119,7 +109,7 @@ class Pimgento_Core_Model_Request extends Mage_Core_Model_Abstract
         /* @var $resource Pimgento_Core_Model_Resource_Request */
         $resource = $this->_getResource();
 
-        return (int)$resource->loadDataInfile($name, $file);
+        return $resource->loadDataInfile($name, $file);
     }
 
     /**

@@ -237,27 +237,16 @@ class Pimgento_Core_Model_Resource_Request extends Mage_Core_Model_Resource_Db_A
      */
     public function loadDataInfile($name, $file)
     {
-        $fieldsTerminated = Mage::getStoreConfig('pimdata/general/csv_fields_terminated');
-        $linesTerminated  = Mage::getStoreConfig('pimdata/general/csv_lines_terminated');
-
         $query = "LOAD DATA INFILE '" . addslashes($file) . "' REPLACE
               INTO TABLE " . $this->getTableName($name) . "
-              FIELDS TERMINATED BY '" . $fieldsTerminated . "'
+              FIELDS TERMINATED BY '" . Mage::getStoreConfig('pimdata/general/csv_fields_terminated') . "'
               OPTIONALLY ENCLOSED BY '\"'
-              LINES TERMINATED BY '" . $linesTerminated . "'
+              LINES TERMINATED BY '" . Mage::getStoreConfig('pimdata/general/csv_lines_terminated') . "'
               IGNORE 1 LINES;";
 
-        $this->_query($query, array(PDO::MYSQL_ATTR_LOCAL_INFILE => 1));
-
-        $adapter = $this->_getReadAdapter();
-
-        return $adapter->fetchOne(
-            $adapter->select()
-                ->from(
-                    $this->getTableName($name),
-                    array('count' => new Zend_Db_Expr('COUNT(*)'))
-                )
-        );
+        return $this->_getWriteAdapter()
+            ->query($query)
+            ->rowCount();
     }
 
     /**
@@ -269,10 +258,7 @@ class Pimgento_Core_Model_Resource_Request extends Mage_Core_Model_Resource_Db_A
      */
     public function getTableName($name)
     {
-        /* @var $coreResource Mage_Core_Model_Resource */
-        $resource = Mage::getSingleton('core/resource');
-
-        return $resource->getTableName('tmp_pimgento_core_' . $name);
+        return $this->_resources->getTableName('tmp_pimgento_core_' . $name);
     }
 
     /**
@@ -371,37 +357,4 @@ class Pimgento_Core_Model_Resource_Request extends Mage_Core_Model_Resource_Db_A
     {
         return trim(str_replace(PHP_EOL, '', preg_replace('/\s+/', ' ', trim($field))),'"');
     }
-
-    /**
-     * Execute Query from command line
-     *
-     * @param string $query
-     * @param array $options
-     *
-     * @return $this
-     * @throws Exception
-     */
-    protected function _query($query, $options = array())
-    {
-        /* @var $connConfig Mage_Core_Model_Config_Element */
-        $connConfig = Mage::getConfig()->getResourceConnectionConfig('core_write');
-
-        if (!$connConfig || !$connConfig->is('active', 1)) {
-            throw new Exception(Mage::helper('pimgento_core')->__('Connection to database is not active'));
-        }
-
-        list($host, $port) = explode(':', $connConfig->host);
-        $dsn = 'mysql:host=' . $host . ';dbname=' . $connConfig->dbname;
-        if ($port) {
-            $dsn .= ';port=' . $port;
-        }
-        
-        $pdo = new PDO($dsn, $connConfig->username, $connConfig->password, $options);
-        $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-
-        $pdo->exec($query);
-
-        return $this;
-    }
-
 }
