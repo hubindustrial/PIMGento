@@ -336,7 +336,7 @@ class Pimgento_Core_Model_Resource_Request extends Mage_Core_Model_Resource_Db_A
      *
      * @return int
      */
-    protected function _getIncrementId($entity)
+    public function _getIncrementId($entity)
     {
         $adapter = $this->_getReadAdapter();
 

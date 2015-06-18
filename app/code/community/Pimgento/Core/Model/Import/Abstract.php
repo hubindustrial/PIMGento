@@ -115,7 +115,7 @@ abstract class Pimgento_Core_Model_Import_Abstract
      *
      * @return Pimgento_Core_Model_Resource_Request
      */
-    protected function getResource()
+    public function getResource()
     {
         return $this->getRequest()->getResource();
     }
@@ -125,7 +125,7 @@ abstract class Pimgento_Core_Model_Import_Abstract
      *
      * @return Varien_Db_Adapter_Interface
      */
-    protected function getAdapter()
+    public function getAdapter()
     {
         return $this->getResource()->getAdapter();
     }
@@ -135,7 +135,7 @@ abstract class Pimgento_Core_Model_Import_Abstract
      *
      * @return string
      */
-    protected function getTable()
+    public function getTable()
     {
         return $this->getResource()->getTableName($this->getCode());
     }
