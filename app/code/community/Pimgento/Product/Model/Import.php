@@ -517,13 +517,17 @@ class Pimgento_Product_Model_Import extends Pimgento_Core_Model_Import_Abstract
 
         $this->getRequest()->setValues($this->getCode(), 'catalog/product', $values, 4, 0);
 
-        /* @var $helper Pimgento_Core_Helper_Data */
-        $helper = Mage::helper('pimgento_core');
+        $channelMappings = explode("\n", Mage::getStoreConfig('pimdata/general/channel_store_mapping'));
 
-        $codes = array_merge(
-            $helper->getStoresLang(),
-            $helper->getStoresWebsites()
-        );
+        $codes = array();
+
+        foreach ($channelMappings as $channelMap) {
+            list($channel, $storeIds) = explode('::', $channelMap);
+
+            foreach (explode(',', $storeIds) as $storeId) {
+                $codes[$channel][] = (int)$storeId;
+            }
+        }
 
         $columns = $this->getRequest()->getFirstLine($file);
 
