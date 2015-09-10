@@ -71,16 +71,15 @@
                             <show_in_website>0</show_in_website>
                             <show_in_store>0</show_in_store>
                         </admin_lang>
-                        <websites translate="label">
-                            <label>Add website mapping</label>
-                            <frontend_model>pimgento_core/adminhtml_system_website</frontend_model>
-                            <backend_model>adminhtml/system_config_backend_serialized_array</backend_model>
-                            <comment>Match website with Pim channel</comment>
-                            <sort_order>6</sort_order>
+                        <channel_store_mapping translate="label">
+                            <label>Add Channel-to-Store Mapping</label>
+                            <frontend_type>textarea</frontend_type>
+                            <comment>Example: (en_US-web_main::1) or (en_US::1,2,3,4)</comment>
+                            <sort_order>7</sort_order>
                             <show_in_default>1</show_in_default>
                             <show_in_website>0</show_in_website>
                             <show_in_store>0</show_in_store>
-                        </websites>
+                        </channel_store_mapping>
                     </fields>
                 </general>
             </groups>
