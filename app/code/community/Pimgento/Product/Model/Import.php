@@ -237,12 +237,14 @@ class Pimgento_Product_Model_Import extends Pimgento_Core_Model_Import_Abstract
 
                 $columns = array(
                     'price'         => array(
-                        $price . '-' . $currency,
-                        $price . '-' . $data['code'] . '-' . $currency
+                        $price . '-' . $currency, // price-USD
+                        $price . '-' . $data['code'] . '-' . $currency, // price-website-USD
+                        $price . '-' . $data['lang'] . '-' . $data['code'] . '-' . $currency, // price-en_US-website-USD
                     ),
                     'special_price' => array(
                         $specialPrice . '-' . $currency,
-                        $specialPrice . '-' . $data['code'] . '-' . $currency
+                        $specialPrice . '-' . $data['code'] . '-' . $currency,
+                        $specialPrice . '-' . $data['lang'] . '-' . $data['code'] . '-' . $currency,
                     ),
                 );
 
@@ -436,6 +438,21 @@ class Pimgento_Product_Model_Import extends Pimgento_Core_Model_Import_Abstract
             }
         }
 
+        if ($this->getConfig('configurable_enabled')) {
+            $disabled = unserialize($this->getConfig('configurable_update'));
+
+            $exclude = array();
+            foreach ($disabled as $pim) {
+                if ($this->columnExists($pim['attribute'])) {
+                    $exclude[$pim['attribute']] = $this->_zde('""');
+                }
+            }
+
+            if (count($exclude)) {
+                $adapter->update($this->getTable(), $exclude, '_type_id = "configurable" AND _is_new = 0');
+            }
+        }
+
         return true;
     }
 
@@ -499,13 +516,8 @@ class Pimgento_Product_Model_Import extends Pimgento_Core_Model_Import_Abstract
         $file = $task->getFile();
 
         $values = array(
-            'tax_class_id' => '_tax_class_id',
-        );
-
-        $this->getRequest()->setValues($this->getCode(), 'catalog/product', $values, 4, 0, 2);
-
-        $values = array(
             'options_container'     => '_options_container',
+            'tax_class_id'          => '_tax_class_id',
             'enable_googlecheckout' => $this->_zde(0),
             'is_recurring'          => $this->_zde(0),
             'visibility'            => $this->_zde(4),
@@ -827,18 +839,20 @@ class Pimgento_Product_Model_Import extends Pimgento_Core_Model_Import_Abstract
                             ->limit(1)
                     );
                     if ($code) {
-                        $data['code'] = $code;
+                        $data['code'] = $helper->getChannel($code);
                     }
                 }
 
                 $columns = array(
                     'price'         => array(
-                        $price . '-' . $currency,
-                        $price . '-' . $data['code'] . '-' . $currency
+                        $price . '-' . $currency, // price-USD
+                        $price . '-' . $data['code'] . '-' . $currency, // price-website-USD
+                        $price . '-' . $data['lang'] . '-' . $data['code'] . '-' . $currency, // price-en_US-website-USD
                     ),
                     'special_price' => array(
                         $specialPrice . '-' . $currency,
-                        $specialPrice . '-' . $data['code'] . '-' . $currency
+                        $specialPrice . '-' . $data['code'] . '-' . $currency,
+                        $specialPrice . '-' . $data['lang'] . '-' . $data['code'] . '-' . $currency,
                     ),
                 );
 
