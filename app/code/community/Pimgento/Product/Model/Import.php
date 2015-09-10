@@ -131,6 +131,22 @@ class Pimgento_Product_Model_Import extends Pimgento_Core_Model_Import_Abstract
         $adapter->addColumn($this->getTable(), '_children',   'VARCHAR(255) NULL');
         $adapter->addColumn($this->getTable(), '_attributes', 'VARCHAR(255) NOT NULL DEFAULT ""');
 
+        if ($adapter->isTableExists('pimgento_variant')) {
+            $select = $adapter->select()
+                ->from(false, array())
+                ->joinInner(
+                    array('v' => $adapter->getTableName('pimgento_variant')),
+                    'p.groups = v.code',
+                    array(
+                        '_attributes' => 'v.axis'
+                    )
+                );
+
+            $adapter->query(
+                $adapter->updateFromSelect($select, array('p' => $this->getTable()))
+            );
+        }
+
         $attributes = explode(',', $this->getConfig('configurable_attributes'));
 
         if (!count($attributes)) {
@@ -158,18 +174,19 @@ class Pimgento_Product_Model_Import extends Pimgento_Core_Model_Import_Abstract
             );
 
             if ($code) {
-                if (!$adapter->tableColumnExists($this->getTable(), $code)) {
-                    $task->setMessage(
-                        Mage::helper('pimgento_product')->__(
-                            'Attribute %s not found in Akeneo, configurable products will not be created', $code
-                        )
+                if ($adapter->tableColumnExists($this->getTable(), $code)) {
+                    $values = array(
+                        '_attributes' => $this->_zde('TRIM(BOTH "," FROM CONCAT(`_attributes`, ",", "' . $id . '"))')
                     );
-                    return false;
+
+                    $variant = '';
+                    if ($adapter->isTableExists('pimgento_variant')) {
+                        $variantTable = $adapter->getTableName('pimgento_variant');
+                        $variant = ' AND `groups` NOT IN (SELECT `code` FROM `' . $variantTable . '`)';
+                    }
+
+                    $adapter->update($this->getTable(), $values, '`' . $code . '` <> "" AND `groups` <> ""' . $variant);
                 }
-                $values = array(
-                    '_attributes' => $this->_zde('TRIM(BOTH "," FROM CONCAT(`_attributes`, ",", "' . $id . '"))')
-                );
-                $adapter->update($this->getTable(), $values, '`' . $code . '` <> "" AND `groups` <> ""');
             }
         }
 
@@ -284,7 +301,47 @@ class Pimgento_Product_Model_Import extends Pimgento_Core_Model_Import_Abstract
      */
     public function matchEntity($task)
     {
-        $this->getRequest()->matchEntity($this->getCode(), 'catalog/product', 'entity_id');
+        $adapter = $this->getAdapter();
+
+        $adapter->delete('tmp_pimgento_core_product', array('code = ?' => ''));
+
+        $adapter->query('
+            UPDATE `tmp_pimgento_core_product` t
+            SET `entity_id` = (
+                SELECT `entity_id` FROM `catalog_product_entity` c
+                WHERE  t.`code` = c.`sku`
+            )');
+
+        $adapter->query('SET @id = ' . $this->getRequest()->getResource()->_getIncrementId('catalog/product'));
+
+        $adapter->update($this->getTable(), array('entity_id' => new Zend_Db_Expr('@id := @id + 1')), 'entity_id IS NULL');
+
+        $select = $adapter->select()
+            ->from(
+                $this->getTable(),
+                array(
+                    'import' => new Zend_Db_Expr("'" . $this->getCode() . "'"),
+                    'code' => 'code',
+                    'entity_id' => 'entity_id'
+                )
+            );
+
+        $insert = $adapter->insertFromSelect(
+            $select,
+            'pimgento_code',
+            array(
+                'import',
+                'code',
+                'entity_id'
+            ),
+            2
+        );
+
+        $adapter->query($insert);
+
+        $maxCode = $adapter->fetchOne('SELECT MAX(`entity_id`) FROM `pimgento_code` WHERE `import` = \'' . $this->getCode() . '\'');
+        $maxEntity = $adapter->fetchOne('SELECT MAX(`entity_id`) FROM `catalog_product_entity`');
+        $adapter->changeTableAutoIncrement('catalog_product_entity', max((int)$maxCode, (int)$maxEntity) + 1);
 
         return true;
     }
@@ -383,7 +440,7 @@ class Pimgento_Product_Model_Import extends Pimgento_Core_Model_Import_Abstract
     }
 
     /**
-     * Create category entities (Step 8)
+     * Create product entities (Step 8)
      *
      * @param Pimgento_Core_Model_Task $task
      *
@@ -590,6 +647,7 @@ class Pimgento_Product_Model_Import extends Pimgento_Core_Model_Import_Abstract
                 )
             )
             ->where('_type_id = ?', 'configurable')
+            ->where('_attributes <> ?', $this->_zde('""'))
         );
 
         $stores = Mage::app()->getStores();
@@ -601,6 +659,10 @@ class Pimgento_Product_Model_Import extends Pimgento_Core_Model_Import_Abstract
             foreach ($attributes as $id) {
 
                 if (!$id) {
+                    continue;
+                }
+
+                if (!is_numeric($id)) {
                     continue;
                 }
 

@@ -9,6 +9,11 @@ abstract class Pimgento_Core_Model_Import_Abstract
 {
 
     /**
+     * @var Pimgento_Core_Model_Request
+     */
+    protected $_request;
+
+    /**
      * @var string
      */
     protected $_code;
@@ -96,9 +101,13 @@ abstract class Pimgento_Core_Model_Import_Abstract
      *
      * @return Pimgento_Core_Model_Request
      */
-    protected function getRequest()
+    public function getRequest()
     {
-        return Mage::getModel('pimgento_core/request');
+        if (!$this->_request) {
+            $this->_request = Mage::getModel('pimgento_core/request');
+        }
+
+        return $this->_request;
     }
 
     /**
@@ -106,7 +115,7 @@ abstract class Pimgento_Core_Model_Import_Abstract
      *
      * @return Pimgento_Core_Model_Resource_Request
      */
-    protected function getResource()
+    public function getResource()
     {
         return $this->getRequest()->getResource();
     }
@@ -116,7 +125,7 @@ abstract class Pimgento_Core_Model_Import_Abstract
      *
      * @return Varien_Db_Adapter_Interface
      */
-    protected function getAdapter()
+    public function getAdapter()
     {
         return $this->getResource()->getAdapter();
     }
@@ -126,7 +135,7 @@ abstract class Pimgento_Core_Model_Import_Abstract
      *
      * @return string
      */
-    protected function getTable()
+    public function getTable()
     {
         return $this->getResource()->getTableName($this->getCode());
     }
