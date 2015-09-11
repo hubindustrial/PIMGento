@@ -180,7 +180,7 @@ abstract class Pimgento_Core_Model_Import_Abstract
      */
     protected function isEnterprise()
     {
-        return Mage::getEdition() == Mage::EDITION_ENTERPRISE;
+        return true;
     }
 
     /**
