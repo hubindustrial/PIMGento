@@ -519,13 +519,6 @@ class Pimgento_Product_Model_Import extends Pimgento_Core_Model_Import_Abstract
 
         $file = $task->getFile();
 
-        $values = array(
-            'options_container'     => '_options_container',
-            'is_recurring'          => $this->_zde(0),
-        );
-
-        $this->getRequest()->setValues($this->getCode(), 'catalog/product', $values, 4, 0);
-
         $channelMappings = explode("\n", Mage::getStoreConfig('pimdata/general/channel_store_mapping'));
 
         $codes = array();
