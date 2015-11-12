@@ -408,6 +408,10 @@ class Pimgento_Product_Model_Import extends Pimgento_Core_Model_Import_Abstract
         $columns = $request->getFirstLine($file);
 
         foreach ($columns as $column) {
+
+            $columnPrefix = explode('-', $column);
+            $columnPrefix = reset($columnPrefix);
+
             if ($adapter->tableColumnExists($this->getTable(), $column)) {
 
                 $select = $adapter->select()
@@ -422,7 +426,7 @@ class Pimgento_Product_Model_Import extends Pimgento_Core_Model_Import_Abstract
                         array(
                             'c' => $resource->getTable('pimgento_core/code')
                         ),
-                        'FIND_IN_SET(REPLACE(`c`.`code`,"' . $column . '_",""), `p`.`' . $column . '`)
+                        'FIND_IN_SET(REPLACE(`c`.`code`,"' . $columnPrefix . '_",""), `p`.`' . $column . '`)
                         AND `c`.`import` = "' . $option->getCode() . '"',
                         array(
                             $column => new Zend_Db_Expr('GROUP_CONCAT(`c`.`entity_id` SEPARATOR ",")')
@@ -477,27 +481,27 @@ class Pimgento_Product_Model_Import extends Pimgento_Core_Model_Import_Abstract
             $family = $this->_zde($product->getDefaultAttributeSetId());
         }
 
-        $parents = $adapter->select()
-            ->from(
-                $this->getTable(),
-                array(
-                    'entity_id'        => 'entity_id',
-                    'entity_type_id'   => $this->_zde(4),
-                    'attribute_set_id' => $family,
-                    'type_id'          => '_type_id',
-                    'sku'              => 'code',
-                    'has_options'      => $this->_zde(0),
-                    'required_options' => $this->_zde(0),
-                    'created_at'       => $this->_zde('now()'),
-                    'updated_at'       => $this->_zde('now()'),
-                )
-            );
-
-        $insert = $adapter->insertFromSelect(
-            $parents, $resource->getTable('catalog/product'), array(), 1
+        $values = array(
+            'entity_id'        => 'entity_id',
+            'entity_type_id'   => $this->_zde(4),
+            'attribute_set_id' => $family,
+            'type_id'          => '_type_id',
+            'sku'              => 'code',
+            'has_options'      => $this->_zde(0),
+            'required_options' => $this->_zde(0),
+            'updated_at'       => $this->_zde('now()'),
         );
 
-        $adapter->query($insert);
+        $parents = $adapter->select()->from($this->getTable(), $values);
+
+        $adapter->query(
+            $adapter->insertFromSelect($parents, $resource->getTable('catalog/product'), array_keys($values), 1)
+        );
+
+        $values = array(
+            'created_at' => $this->_zde('now()')
+        );
+        $adapter->update($resource->getTable('catalog/product'), $values, 'created_at IS NULL');
 
         return true;
     }
@@ -1049,7 +1053,7 @@ class Pimgento_Product_Model_Import extends Pimgento_Core_Model_Import_Abstract
                     'product_id'                => 'entity_id',
                     'stock_id'                  => $this->_zde(1),
                     'qty'                       => $this->_zde(0),
-                    'is_in_stock'               => $this->_zde(0),
+                    'is_in_stock'               => $this->_zde('IF(`type_id` = "configurable", 1, 0)'),
                     'low_stock_date'            => $this->_zde('NULL'),
                     'stock_status_changed_auto' => $this->_zde(0),
                 )
