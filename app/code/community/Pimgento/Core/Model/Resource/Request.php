@@ -253,6 +253,7 @@ class Pimgento_Core_Model_Resource_Request extends Mage_Core_Model_Resource_Db_A
     {
         $query = "LOAD DATA INFILE '" . addslashes($file) . "' REPLACE
               INTO TABLE " . $this->getTableName($name) . "
+              CHARACTER SET UTF8
               FIELDS TERMINATED BY '" . Mage::getStoreConfig('pimdata/general/csv_fields_terminated') . "'
               OPTIONALLY ENCLOSED BY '\"'
               LINES TERMINATED BY '" . Mage::getStoreConfig('pimdata/general/csv_lines_terminated') . "'
